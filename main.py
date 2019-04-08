@@ -22,20 +22,10 @@ def main(args):
     finder = ModuleFinder(path)
     finder.run_script(file_path)
 
-    cert_package_set = set()
-    cert_package_set.add(dir_path)
-
     pp = pprint.PrettyPrinter(indent=2)
 
     # Make a dict of packages that are certified
-    for name, mod in finder.modules.items():
-        file_path = mod.__file__
-        if file_path and '__init__.py' in file_path:
-            certified = check_if_certified(file_path)
-            if certified:
-                last_slash_index = file_path.rfind('/')
-                package_dir = file_path[0:last_slash_index]
-                cert_package_set.add(package_dir)
+    cert_package_set = get_certified_packages(finder, dir_path)
 
     all_good = True
     ok_files = []
@@ -69,6 +59,22 @@ def main(args):
 
     if all_good:
         print("All clear")
+
+
+def get_certified_packages(finder, dir_path):
+    cert_package_set = set()
+    cert_package_set.add(dir_path)
+
+    for name, mod in finder.modules.items():
+        file_path = mod.__file__
+        if file_path and '__init__.py' in file_path:
+            certified = check_if_certified(file_path)
+            if certified:
+                last_slash_index = file_path.rfind('/')
+                package_dir = file_path[0:last_slash_index]
+                cert_package_set.add(package_dir)
+
+    return cert_package_set
 
 
 def input_ok(file_path, top_directory):
