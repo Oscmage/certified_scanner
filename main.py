@@ -25,7 +25,7 @@ def main(args):
     # Make a dict of packages that are certified
     for name, mod in finder.modules.items():
         file_path = mod.__file__
-        if '__init__.py' in file_path:
+        if file_path and '__init__.py' in file_path:
             certified = check_if_certified(file_path)
             if certified:
                 last_slash_index = file_path.rfind('/')
@@ -35,15 +35,16 @@ def main(args):
     all_good = True
     for name, mod in finder.modules.items():
         file_path = mod.__file__
-        last_slash_index = file_path.rfind('/')
-        file_dir = file_path[0:last_slash_index]
+        if file_path:
+            last_slash_index = file_path.rfind('/')
+            file_dir = file_path[0:last_slash_index]
 
-        if file_dir not in cert_package_set:
-            all_good = False
-            print(
-                bcolors.get_colored_string(file_path)
-                + " is imported by a certified module but not certified"
-            )
+            if file_dir not in cert_package_set:
+                all_good = False
+                print(
+                    bcolors.get_colored_string(file_path)
+                    + " is imported by a certified module but not certified"
+                )
     if all_good:
         print("All clear")
 
