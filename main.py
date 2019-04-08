@@ -18,6 +18,7 @@ def main(args):
     # print(dir_path)
     # Get all subdirectories and add them to sys.path to not get any missing modules.
     path = get_path(dir_path)
+    # print(path)
     finder = ModuleFinder(path)
     finder.run_script(file_path)
 
@@ -34,6 +35,7 @@ def main(args):
                 cert_package_set.add(package_dir)
 
     all_good = True
+    ok_files = []
     for name, mod in finder.modules.items():
         file_path = mod.__file__
         if file_path:
@@ -42,19 +44,25 @@ def main(args):
             if file_dir not in cert_package_set:
                 all_good = False
                 print(
-                    bcolors.get_colored_string(file_path)
+                    bcolors.get_red_color_string(file_path)
                     + " is imported by a certified module but not certified"
                 )
+            else:
+                ok_files.append(file_path)
 
     not_found_modules = finder.any_missing()
     if len(not_found_modules) != 0:
         all_good = False
         print(
-            bcolors.get_colored_string(
+            bcolors.get_red_color_string(
                 "The following modules were not found by modulefinder which means you can not trust this result"
             )
         )
         print(not_found_modules)
+
+    if ok_files:
+        print(bcolors.get_green_color_string("The following files are certified and ok:"))
+        print(ok_files)
 
     if all_good:
         print("All clear")
@@ -95,11 +103,20 @@ def get_path(file_dir):
 
 
 class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
-    def get_colored_string(text):
+    def get_red_color_string(text):
         return bcolors.FAIL + text + bcolors.ENDC
+
+    def get_green_color_string(text):
+        return bcolors.OKGREEN + text + bcolors.ENDC
 
 
 if __name__ == '__main__':
