@@ -1,6 +1,6 @@
 import sys
 import os
-
+import pprint
 
 from modulefinder import ModuleFinder
 
@@ -24,6 +24,9 @@ def main(args):
 
     cert_package_set = set()
     cert_package_set.add(dir_path)
+
+    pp = pprint.PrettyPrinter(indent=2)
+
     # Make a dict of packages that are certified
     for name, mod in finder.modules.items():
         file_path = mod.__file__
@@ -48,7 +51,7 @@ def main(args):
                     + " is imported by a certified module but not certified"
                 )
             else:
-                ok_files.append(file_path)
+                ok_files.append(os.path.realpath(file_path))
 
     not_found_modules = finder.any_missing()
     if len(not_found_modules) != 0:
@@ -58,11 +61,11 @@ def main(args):
                 "The following modules were not found by modulefinder which means you can not trust this result"
             )
         )
-        print(not_found_modules)
+        pp.pprint(not_found_modules)
 
     if ok_files:
         print(bcolors.get_green_color_string("The following files are certified and ok:"))
-        print(ok_files)
+        pp.pprint(ok_files)
 
     if all_good:
         print("All clear")
