@@ -1,4 +1,4 @@
 # Certified Scanner
-Certified scanner is a project conducted to check if a module is certified. That is, itself is marked `certfied = True` and all it's imports.
+Scans python packages for `certified = True` to let a user know if the module they are checking could be marked as certified. In the future a reference for the usage (master thesis) will be added. 
 
 
