@@ -6,14 +6,15 @@ from modulefinder import ModuleFinder
 
 
 def main(args):
-    if len(args) != 1:
-        print("Expect one argument, file path")
+    if len(args) != 2:
+        print("Expecting two argument, file path followed by directory")
+        return
     file_path = args[0]
-    if not input_ok(file_path):
+    top_directory = args[1]
+    if not input_ok(file_path, top_directory):
         return
     file_path = os.path.realpath(file_path)
-
-    dir_path = os.path.dirname(file_path)
+    dir_path = os.path.dirname(top_directory)
     # print(dir_path)
     # Get all subdirectories and add them to sys.path to not get any missing modules.
     path = get_path(dir_path)
@@ -25,7 +26,7 @@ def main(args):
     # Make a dict of packages that are certified
     for name, mod in finder.modules.items():
         file_path = mod.__file__
-        if '__init__.py' in file_path:
+        if file_path and '__init__.py' in file_path:
             certified = check_if_certified(file_path)
             if certified:
                 last_slash_index = file_path.rfind('/')
@@ -35,20 +36,31 @@ def main(args):
     all_good = True
     for name, mod in finder.modules.items():
         file_path = mod.__file__
+        if file_path:
+            last_slash_index = file_path.rfind('/')
+            file_dir = file_path[0:last_slash_index]
+            if file_dir not in cert_package_set:
+                all_good = False
+                print(
+                    bcolors.get_colored_string(file_path)
+                    + " is imported by a certified module but not certified"
+                )
 
-        last_slash_index = file_path.rfind('/')
-        file_dir = file_path[0:last_slash_index]
-        if file_dir not in cert_package_set:
-            all_good = False
-            print(
-                bcolors.get_colored_string(file_path)
-                + " is imported by a certified module but not certified"
+    not_found_modules = finder.any_missing()
+    if len(not_found_modules) != 0:
+        all_good = False
+        print(
+            bcolors.get_colored_string(
+                "The following modules were not found by modulefinder which means you can not trust this result"
             )
+        )
+        print(not_found_modules)
+
     if all_good:
         print("All clear")
 
 
-def input_ok(file_path):
+def input_ok(file_path, top_directory):
     if not os.path.isfile(file_path):
         print("Not a file, pass me something real.")
         return False
@@ -56,6 +68,11 @@ def input_ok(file_path):
     if not file_path.endswith('.py'):
         print("Cmon, keep it real, give me a python file")
         return False
+
+    if not os.path.isdir(top_directory):
+        print("Invalid directory")
+        return False
+
     return True
 
 
